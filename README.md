@@ -2,7 +2,7 @@
 
 ## Run 3 AI agents in parallel. Zero babysitting.
 
-Stop watching tabs. Auto Accept keeps every Antigravity conversation moving — accepting file edits, terminal commands, and recovery prompts automatically.
+Stop watching tabs. Auto Accept keeps every Antigravity and Cursor conversation moving — accepting file edits, terminal commands, and recovery prompts automatically.
 
 ---
 
@@ -12,7 +12,7 @@ Stop watching tabs. Auto Accept keeps every Antigravity conversation moving — 
 
 ## Why Auto Accept?
 
-Antigravity's multi-agent workflow is powerful, but it stops every time the agent needs approval. 
+Antigravity and Cursor's multi-agent workflow is powerful, but it stops every time the agent needs approval. 
 
 **That's dozens of interruptions per hour.**
 
@@ -26,11 +26,11 @@ Auto Accept eliminates the wait:
 
 ## Features
 
-### Background Mode (Pro)
-Run multiple Antigravity tabs simultaneously. Every conversation auto-accepts in the background — no tab-switching required.
+### Background Mode
+Run multiple tabs simultaneously. Every conversation auto-accepts in the background — no tab-switching required.
 
 ### Dangerous Command Blocking
-Built-in protection against destructive commands like `rm -rf /`. Pro users can customize the blocklist.
+Built-in protection against destructive commands like `rm -rf /`. Fully customizable.
 
 ### Real-time Status Overlay
 Visual indicators show conversation state:
@@ -41,7 +41,7 @@ Visual indicators show conversation state:
 - ✅ Antigravity
 - ✅ Cursor
 - ✅ Multiple windows
-- ✅ Minimized/unfocused
+- ✅ Minimized/unfocused ide window
 
 ---
 
@@ -54,20 +54,6 @@ Visual indicators show conversation state:
 5. **Done** — Auto Accept activates automatically
 
 The extension runs silently. Check the status bar for `Auto Accept: ON`.
-
----
-
-## Pro Features
-
-| Feature | Free | Pro |
-|---------|------|-----|
-| Auto-accept in active tab | ✅ | ✅ |
-| Background mode (all tabs) | — | ✅ |
-| Custom banned commands | — | ✅ |
-| Adjustable polling speed | — | ✅ |
-| Stuck agent recovery | — | ✅ |
-| Multi-window support | — | ✅ |
-
 
 ---
 
