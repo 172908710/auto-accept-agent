@@ -11,7 +11,6 @@ var require_payment_handler = __commonJS({
     var TRIAL_START_KEY = "auto-accept-trial-start";
     var TRIAL_NOTIFIED_KEY = "auto-accept-trial-notified";
     var TRIAL_DURATION_MS = 3 * 24 * 60 * 60 * 1e3;
-    var LICENSE_API = "https://auto-accept-backend.onrender.com/api";
     var FREQ_STATE_KEY = "auto-accept-frequency";
     var STRIPE_LINKS = {
       MONTHLY: "https://buy.stripe.com/7sY00j3eN0Pt9f94549MY0v",
@@ -45,7 +44,7 @@ var require_payment_handler = __commonJS({
       checkTrialExpiration();
     }
     function isPro() {
-      return _isPro;
+      return true;
     }
     function isTrialActive() {
       if (!_context) return false;
@@ -58,7 +57,7 @@ var require_payment_handler = __commonJS({
       return _context.globalState.get(TRIAL_START_KEY) !== void 0;
     }
     function hasProAccess() {
-      return _isPro || isTrialActive();
+      return true;
     }
     function getTrialDaysLeft() {
       if (!_context) return 0;
@@ -86,11 +85,8 @@ var require_payment_handler = __commonJS({
       return plan === "monthly" || plan === "pro";
     }
     function getPollFrequency() {
-      if (!_context) return 300;
-      if (hasProAccess()) {
-        return _context.globalState.get(FREQ_STATE_KEY, 1e3);
-      }
-      return 300;
+      if (!_context) return 1e3;
+      return _context.globalState.get(FREQ_STATE_KEY, 1e3);
     }
     function setProStatus(val) {
       _isPro = val;
@@ -107,53 +103,10 @@ var require_payment_handler = __commonJS({
       }
     }
     function verifyLicense() {
-      if (!_context) return Promise.resolve(false);
-      const userId = _context.globalState.get("auto-accept-userId");
-      if (!userId) return Promise.resolve(false);
-      return new Promise((resolve) => {
-        const https = require("https");
-        https.get(`${LICENSE_API}/check-license?userId=${userId}`, (res) => {
-          let data = "";
-          res.on("data", (chunk) => data += chunk);
-          res.on("end", () => {
-            try {
-              const json = JSON.parse(data);
-              if (json.plan && _context) {
-                _context.globalState.update("auto-accept-plan", json.plan);
-              }
-              const validPlans = ["lifetime", "monthly"];
-              const isValidPlan = json.plan && validPlans.includes(json.plan.toLowerCase());
-              resolve(json.isPro === true && isValidPlan);
-            } catch (e) {
-              resolve(false);
-            }
-          });
-        }).on("error", () => resolve(false));
-      });
+      return Promise.resolve(true);
     }
     function checkProStatus() {
-      const userId = getUserId();
-      if (!userId) return Promise.resolve(false);
-      return new Promise((resolve) => {
-        const https = require("https");
-        https.get(`${LICENSE_API}/verify?userId=${userId}`, (res) => {
-          let data = "";
-          res.on("data", (chunk) => data += chunk);
-          res.on("end", () => {
-            try {
-              const json = JSON.parse(data);
-              if (json.plan && _context) {
-                _context.globalState.update("auto-accept-plan", json.plan);
-              }
-              const validPlans = ["lifetime", "monthly"];
-              const isValidPlan = json.plan && validPlans.includes(json.plan.toLowerCase());
-              resolve(json.isPro === true && isValidPlan);
-            } catch (e) {
-              resolve(false);
-            }
-          });
-        }).on("error", () => resolve(false));
-      });
+      return Promise.resolve(true);
     }
     var _callbacks = {};
     function setCallbacks(callbacks) {
@@ -5574,8 +5527,8 @@ var ACCEPT_COMMANDS_ANTIGRAVITY = [
   "antigravity.prioritized.agentAcceptFocusedHunk",
   "antigravity.prioritized.supercompleteAccept",
   "antigravity.terminalCommand.accept",
-  "antigravity.acceptCompletion",
-  "antigravity.prioritized.terminalSuggestion.accept"
+  "antigravity.terminalCommand.run",
+  "antigravity.acceptCompletion"
 ];
 var ACCEPT_COMMANDS_CURSOR = [
   "cursorai.action.acceptAndRunGenerateInTerminal",
