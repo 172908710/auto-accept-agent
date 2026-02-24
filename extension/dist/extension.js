@@ -5503,7 +5503,6 @@ var GLOBAL_STATE_KEY = "auto-accept-enabled-global";
 var BANNED_COMMANDS_KEY = "auto-accept-banned-commands";
 var INSTANCE_ID = Math.random().toString(36).substring(7);
 var isEnabled = false;
-var isLockedOut = false;
 var pollFrequency = 2e3;
 var bannedCommands = [];
 var backgroundModeEnabled = false;
@@ -5915,7 +5914,7 @@ async function handleBackgroundToggle(context) {
   updateStatusBar();
 }
 async function syncSessions() {
-  if (cdpHandler && !isLockedOut) {
+  if (cdpHandler) {
     log(`CDP: Syncing sessions (Mode: ${backgroundModeEnabled ? "Background" : "Simple"})...`);
     try {
       await cdpHandler.start({
@@ -6010,7 +6009,7 @@ function updateStatusBar() {
     if (cdpConnected) {
       tooltip += " (CDP Connected)";
     }
-    if (isLockedOut) {
+    if (false) {
       statusText = "PAUSED (Multi-window)";
       bgColor = new vscode.ThemeColor("statusBarItem.warningBackground");
       icon = "$(sync~spin)";

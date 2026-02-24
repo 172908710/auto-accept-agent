@@ -14,7 +14,7 @@
  *   window.__autoAcceptStop()
  *   window.__autoAcceptGetStats()
  */
-(function() {
+(function () {
     'use strict';
 
     if (typeof window === 'undefined') return;
@@ -56,7 +56,58 @@
     // =================================================================
 
     function clickAcceptButtons() {
-        return 0;
+        let clicked = 0;
+        const acceptSelectors = [
+            // Cursor
+            '.monaco-button[title*="Accept"]',
+            '.monaco-button[title*="Run in Terminal"]',
+            // Antigravity (general buttons)
+            'button:contains("Accept")',
+            'button:contains("Run")'
+        ];
+
+        // Use XPath for text matching since querySelector doesn't support :contains well
+        const evalXPath = (xpath, context) => {
+            const results = [];
+            try {
+                const query = document.evaluate(xpath, context, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+                for (let i = 0; i < query.snapshotLength; i++) {
+                    results.push(query.snapshotItem(i));
+                }
+            } catch (e) { }
+            return results;
+        };
+
+        getDocuments().forEach(doc => {
+            // CSS selector clicks
+            for (const selector of ['.monaco-button[title*="Accept"]', '.monaco-button[title*="Run"]', 'button.auto-accept-target']) {
+                try {
+                    const btns = Array.from(doc.querySelectorAll(selector));
+                    for (const btn of btns) {
+                        btn.click();
+                        clicked++;
+                    }
+                } catch (e) { }
+            }
+
+            // Text-based clicks for Antigravity's 'Accept' and 'Run' buttons
+            const xpaths = [
+                "//button[contains(., 'Accept') and not(contains(., 'Reject'))]",
+                "//button[contains(., 'Run') and not(contains(., 'Running'))]"
+            ];
+            for (const xp of xpaths) {
+                const btns = evalXPath(xp, doc);
+                for (const btn of btns) {
+                    // Make sure it's actually visible
+                    if (btn.offsetWidth > 0 && btn.offsetHeight > 0) {
+                        btn.click();
+                        clicked++;
+                    }
+                }
+            }
+        });
+
+        return clicked;
     }
 
     // =================================================================
@@ -584,11 +635,11 @@
         };
     }
 
-    window.__autoAcceptGetStats = function() {
+    window.__autoAcceptGetStats = function () {
         return { clicks: window.__autoAcceptState.clicks || 0 };
     };
 
-    window.__autoAcceptStart = function(config) {
+    window.__autoAcceptStart = function (config) {
         const state = window.__autoAcceptState;
 
         // Stop if already running
@@ -640,7 +691,7 @@
         log('Active!');
     };
 
-    window.__autoAcceptStop = function() {
+    window.__autoAcceptStop = function () {
         const state = window.__autoAcceptState;
         state.isRunning = false;
 
@@ -656,8 +707,8 @@
     };
 
     // Compatibility placeholders for cdp-handler.js
-    window.__autoAcceptSetFocusState = function() {};
-    window.__autoAcceptUpdateBannedCommands = function() {};
+    window.__autoAcceptSetFocusState = function () { };
+    window.__autoAcceptUpdateBannedCommands = function () { };
 
     log('Ready');
 })();

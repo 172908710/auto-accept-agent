@@ -549,7 +549,7 @@ async function handleBackgroundToggle(context) {
 
 
 async function syncSessions() {
-    if (cdpHandler && !isLockedOut) {
+    if (cdpHandler) {
         log(`CDP: Syncing sessions (Mode: ${backgroundModeEnabled ? 'Background' : 'Simple'})...`);
         try {
             await cdpHandler.start({
@@ -696,7 +696,7 @@ function updateStatusBar() {
             tooltip += ' (CDP Connected)';
         }
 
-        if (isLockedOut) {
+        if (false) { // was isLockedOut
             statusText = 'PAUSED (Multi-window)';
             bgColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             icon = '$(sync~spin)';
