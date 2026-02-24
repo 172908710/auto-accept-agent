@@ -70,10 +70,24 @@ function getAcceptCommandsForIDE() {
     return [];
 }
 
+let _lastCommandLog = 0;
 async function executeAcceptCommandsForIDE() {
     const commands = getAcceptCommandsForIDE();
-    if (commands.length === 0) return;
-    await Promise.allSettled(commands.map(cmd => vscode.commands.executeCommand(cmd)));
+    if (commands.length === 0) {
+        const now = Date.now();
+        if (now - _lastCommandLog > 10000) {
+            log(`[CMD] No commands for IDE '${currentIDE}' - commands list is empty`);
+            _lastCommandLog = now;
+        }
+        return;
+    }
+    const results = await Promise.allSettled(commands.map(cmd => vscode.commands.executeCommand(cmd)));
+    const now = Date.now();
+    if (now - _lastCommandLog > 10000) {
+        const summary = results.map((r, i) => `${commands[i].split('.').pop()}:${r.status}`).join(', ');
+        log(`[CMD] Executed ${commands.length} commands: ${summary}`);
+        _lastCommandLog = now;
+    }
 }
 
 // Handlers (used by both IDEs now)
@@ -209,6 +223,7 @@ async function activate(context) {
 
         log(`Auto Accept: Activating...`);
         log(`Auto Accept: Detected environment: ${currentIDE.toUpperCase()}`);
+        log(`Auto Accept: appName='${vscode.env.appName}', commands=${getAcceptCommandsForIDE().length}`);
 
         // Setup Focus Listener - Push state to browser (authoritative source)
         vscode.window.onDidChangeWindowState(async (e) => {
@@ -566,37 +581,9 @@ async function startPolling() {
         executeAcceptCommandsForIDE().catch(() => { });
     }, pollFrequency);
 
-    // Polling now primarily handles the Instance Lock and ensures CDP is active
+    // Polling ensures CDP sessions stay active. Each window runs independently.
     pollTimer = setInterval(async () => {
         if (!isEnabled) return;
-
-        // Check for instance locking - only the first extension instance should control CDP
-        const lockKey = `${currentIDE.toLowerCase()}-instance-lock`;
-        const activeInstance = globalContext.globalState.get(lockKey);
-        const myId = globalContext.extension.id;
-
-        if (activeInstance && activeInstance !== myId) {
-            const lastPing = globalContext.globalState.get(`${lockKey}-ping`);
-            if (lastPing && (Date.now() - lastPing) < 15000) {
-                if (!isLockedOut) {
-                    log(`CDP Control: Locked by another instance (${activeInstance}). Standby mode.`);
-                    isLockedOut = true;
-                    updateStatusBar();
-                }
-                return;
-            }
-        }
-
-        // We are the leader or lock is dead
-        globalContext.globalState.update(lockKey, myId);
-        globalContext.globalState.update(`${lockKey}-ping`, Date.now());
-
-        if (isLockedOut) {
-            log('CDP Control: Lock acquired. Resuming control.');
-            isLockedOut = false;
-            updateStatusBar();
-        }
-
         await syncSessions();
     }, 5000);
 }

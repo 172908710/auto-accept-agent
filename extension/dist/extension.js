@@ -5540,10 +5540,24 @@ function getAcceptCommandsForIDE() {
   if (ide === "cursor") return ACCEPT_COMMANDS_CURSOR;
   return [];
 }
+var _lastCommandLog = 0;
 async function executeAcceptCommandsForIDE() {
   const commands = getAcceptCommandsForIDE();
-  if (commands.length === 0) return;
-  await Promise.allSettled(commands.map((cmd) => vscode.commands.executeCommand(cmd)));
+  if (commands.length === 0) {
+    const now2 = Date.now();
+    if (now2 - _lastCommandLog > 1e4) {
+      log(`[CMD] No commands for IDE '${currentIDE}' - commands list is empty`);
+      _lastCommandLog = now2;
+    }
+    return;
+  }
+  const results = await Promise.allSettled(commands.map((cmd) => vscode.commands.executeCommand(cmd)));
+  const now = Date.now();
+  if (now - _lastCommandLog > 1e4) {
+    const summary = results.map((r, i) => `${commands[i].split(".").pop()}:${r.status}`).join(", ");
+    log(`[CMD] Executed ${commands.length} commands: ${summary}`);
+    _lastCommandLog = now;
+  }
 }
 var cdpHandler;
 var relauncher;
@@ -5642,6 +5656,7 @@ async function activate(context) {
     context.subscriptions.push(outputChannel);
     log(`Auto Accept: Activating...`);
     log(`Auto Accept: Detected environment: ${currentIDE.toUpperCase()}`);
+    log(`Auto Accept: appName='${vscode.env.appName}', commands=${getAcceptCommandsForIDE().length}`);
     vscode.window.onDidChangeWindowState(async (e) => {
       if (cdpHandler && cdpHandler.setFocusState) {
         await cdpHandler.setFocusState(e.focused);
@@ -5928,27 +5943,6 @@ async function startPolling() {
   }, pollFrequency);
   pollTimer = setInterval(async () => {
     if (!isEnabled) return;
-    const lockKey = `${currentIDE.toLowerCase()}-instance-lock`;
-    const activeInstance = globalContext.globalState.get(lockKey);
-    const myId = globalContext.extension.id;
-    if (activeInstance && activeInstance !== myId) {
-      const lastPing = globalContext.globalState.get(`${lockKey}-ping`);
-      if (lastPing && Date.now() - lastPing < 15e3) {
-        if (!isLockedOut) {
-          log(`CDP Control: Locked by another instance (${activeInstance}). Standby mode.`);
-          isLockedOut = true;
-          updateStatusBar();
-        }
-        return;
-      }
-    }
-    globalContext.globalState.update(lockKey, myId);
-    globalContext.globalState.update(`${lockKey}-ping`, Date.now());
-    if (isLockedOut) {
-      log("CDP Control: Lock acquired. Resuming control.");
-      isLockedOut = false;
-      updateStatusBar();
-    }
     await syncSessions();
   }, 5e3);
 }
