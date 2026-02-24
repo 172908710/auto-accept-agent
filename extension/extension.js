@@ -54,8 +54,8 @@ const ACCEPT_COMMANDS_ANTIGRAVITY = [
     'antigravity.prioritized.agentAcceptFocusedHunk',
     'antigravity.prioritized.supercompleteAccept',
     'antigravity.terminalCommand.accept',
-    'antigravity.acceptCompletion',
-    'antigravity.prioritized.terminalSuggestion.accept'
+    'antigravity.terminalCommand.run',
+    'antigravity.acceptCompletion'
 ];
 
 const ACCEPT_COMMANDS_CURSOR = [

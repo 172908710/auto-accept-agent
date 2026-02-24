@@ -58,7 +58,7 @@ function init(context) {
 
 // --- State Queries ---
 function isPro() {
-    return _isPro;
+    return true;
 }
 
 function isTrialActive() {
@@ -74,7 +74,7 @@ function hasTrialStarted() {
 }
 
 function hasProAccess() {
-    return _isPro || isTrialActive();
+    return true;
 }
 
 function getTrialDaysLeft() {
@@ -106,11 +106,8 @@ function isPlanRecurring() {
 }
 
 function getPollFrequency() {
-    if (!_context) return 300;
-    if (hasProAccess()) {
-        return _context.globalState.get(FREQ_STATE_KEY, 1000);
-    }
-    return 300;
+    if (!_context) return 1000;
+    return _context.globalState.get(FREQ_STATE_KEY, 1000);
 }
 
 // --- State Setters ---
@@ -133,56 +130,11 @@ function startTrial() {
 
 // --- License Verification ---
 function verifyLicense() {
-    if (!_context) return Promise.resolve(false);
-    const userId = _context.globalState.get('auto-accept-userId');
-    if (!userId) return Promise.resolve(false);
-
-    return new Promise((resolve) => {
-        const https = require('https');
-        https.get(`${LICENSE_API}/check-license?userId=${userId}`, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(data);
-                    if (json.plan && _context) {
-                        _context.globalState.update('auto-accept-plan', json.plan);
-                    }
-                    const validPlans = ['lifetime', 'monthly'];
-                    const isValidPlan = json.plan && validPlans.includes(json.plan.toLowerCase());
-                    resolve(json.isPro === true && isValidPlan);
-                } catch (e) {
-                    resolve(false);
-                }
-            });
-        }).on('error', () => resolve(false));
-    });
+    return Promise.resolve(true);
 }
 
 function checkProStatus() {
-    const userId = getUserId();
-    if (!userId) return Promise.resolve(false);
-
-    return new Promise((resolve) => {
-        const https = require('https');
-        https.get(`${LICENSE_API}/verify?userId=${userId}`, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(data);
-                    if (json.plan && _context) {
-                        _context.globalState.update('auto-accept-plan', json.plan);
-                    }
-                    const validPlans = ['lifetime', 'monthly'];
-                    const isValidPlan = json.plan && validPlans.includes(json.plan.toLowerCase());
-                    resolve(json.isPro === true && isValidPlan);
-                } catch (e) {
-                    resolve(false);
-                }
-            });
-        }).on('error', () => resolve(false));
-    });
+    return Promise.resolve(true);
 }
 
 // --- Actions ---
